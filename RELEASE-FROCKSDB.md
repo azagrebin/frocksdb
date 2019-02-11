@@ -68,3 +68,57 @@ Run commands:
 
 ## Push to maven central
 
+Edit the `frocksdbjni-5.17.2-artisans-1.0.pom` file and replace `<version>-</version>` with `<version>5.17.2-artisans-1.0</version>`
+
+Create a file called `deploysettings.xml`:
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <servers>
+    <server>
+      <id>sonatype-nexus-staging</id>
+      <username>${sonatype_user}</username>
+      <password>${sonatype_pw}</password>
+    </server>
+  </servers>
+</settings>
+
+
+```
+
+
+Run the following script:
+
+```bash
+function deploy() {
+  FILE=$1
+  CLASSIFIER=$2
+  echo "Deploying file=$FILE with classifier=$CLASSIFIER to sonatype"
+  sonatype_user=XXXXX sonatype_pw=YYYYYYY mvn gpg:sign-and-deploy-file \
+   --settings deploysettings.xml \
+   -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ \
+   -DrepositoryId=sonatype-nexus-staging \
+   -DpomFile=frocksdbjni-5.17.2-artisans-1.0.pom \
+   -Dfile=$FILE \
+   -Dclassifier=$CLASSIFIER \
+   -Dgpg.keyname=ZZZZZ  \
+   -Dgpg.passphrase=QQQQQ
+}
+
+
+deploy frocksdbjni-5.17.2-artisans-1.0-sources.jar sources
+deploy frocksdbjni-5.17.2-artisans-1.0-javadoc.jar javadoc
+deploy frocksdbjni-5.17.2-artisans-1.0.jar
+```
+
+Go to the staging repositories on Sonatype:
+
+https://oss.sonatype.org/#stagingRepositories
+
+Select the open staging repository and click on "Close".
+
+Test the files in the staging repository (which will look something like this `https://oss.sonatype.org/content/repositories/comdata-artisans-1020`)
+
+Press the "Release" button (beware: this can not be undone)
